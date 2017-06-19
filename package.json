@@ -1,6 +1,6 @@
 {
-  "name": "boldr-plugin-webpack",
-  "version": "0.0.10",
+  "name": "@boldr/plugin-webpack",
+  "version": "0.1.0",
   "description": "Webpack plugin for Boldr.",
   "main": "lib/index.js",
   "scripts": {

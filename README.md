@@ -4,21 +4,21 @@ Webpack plugin designed for use with [Boldr](https://github.com/strues/boldr).
 
 ### Usage
 
-Install the plugin in your project directory, `yarn add --dev boldr-plugin-webpack`.    
+Install the plugin in your project directory, `yarn add --dev @boldr/plugin-webpack`.    
 Edit your `boldr.config.js` file to "require" the plugin.   
 
 ```javascript
 // boldr.config.js
 module.exports = {
   env: {...},
-  plugins:[require('boldr-plugin-webpack')],
+  plugins:[require('@boldr/plugin-webpack')],
   bundle: {...},
 }
 ```
 
 Once required in your `package.json`, the `boldr dev` and `boldr build` commands within [Boldr CLI](https://github.com/boldr/boldr-cli) will function appropriately.  
 
-If you do **not** have Boldr CLI installed, go ahead and install it globally with `npm install -g boldr-cli`.   
+If you do **not** have Boldr CLI installed, go ahead and install it globally with `npm install -g @boldr/cli`.   
 
 
 ### Configuration
