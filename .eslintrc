@@ -1,0 +1,3 @@
+{
+  "extends": ["boldr", "boldr/flowtype", "boldr/import", "boldr/promise"]
+}

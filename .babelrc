@@ -1,0 +1,14 @@
+{
+  "presets": [["env", {
+    "modules": "commonjs",
+    "useBuiltins": true,
+    "targets": {
+      "node": 8
+    }
+    }]],
+    "plugins": [
+      "syntax-flow",
+      "transform-object-rest-spread",
+      "transform-flow-strip-types"
+    ]
+}
