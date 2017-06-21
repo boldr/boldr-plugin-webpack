@@ -11,7 +11,8 @@ const filterEmpty = require('boldr-utils/lib/objects/filterEmpty');
 const appRoot = require('boldr-utils/lib/node/appRoot');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const AssetsPlugin = require('assets-webpack-plugin');
-const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
+// const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
+const BabiliPlugin = require('babili-webpack-plugin');
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
 const ChunkManifestPlugin = require('chunk-manifest-webpack-plugin');
 const CaseSensitivePathsPlugin = require('case-sensitive-paths-webpack-plugin');
@@ -61,7 +62,7 @@ module.exports = function createBrowserWebpack(
       version: require.resolve('../package.json').version,
     });
   }
-
+  const sharedDir = path.resolve(bundle.srcDir, 'shared/');
   const prefetches = [
     path.resolve(bundle.srcDir, 'shared/scenes/Blog/BlogContainer.js'),
     path.resolve(bundle.srcDir, 'shared/scenes/Blog/routes.js'),
@@ -108,17 +109,15 @@ module.exports = function createBrowserWebpack(
       path: bundle.client.bundleDir,
       filename: _DEV ? '[name].js' : '[name]-[chunkhash].js',
       chunkFilename: _DEV ? '[name]-[hash].js' : '[name]-[chunkhash].js',
-      publicPath: ifDev(
-        `http://localhost:${BOLDR_DEV_PORT}/`,
-        // Otherwise we expect our bundled output to be served from this path.
-        bundle.webPath,
-      ),
+      // Full URL in dev otherwise we expect our bundled output to be served from /assets/
+      publicPath: _DEV ? `http://localhost:${BOLDR_DEV_PORT}/` : bundle.webPath,
       // only dev
       pathinfo: _DEV,
       libraryTarget: 'var',
       strictModuleExceptionHandling: true,
       devtoolModuleFilenameTemplate: info => path.resolve(info.absoluteResourcePath),
     },
+    // fail on err
     bail: _PROD,
     // cache dev
     cache: cache[`client-${mode}`],
@@ -153,14 +152,14 @@ module.exports = function createBrowserWebpack(
       mainFields: ['web', 'browser', 'style', 'module', 'jsnext:main', 'main'],
       descriptionFiles: ['package.json'],
       alias: {
-        '~scenes': path.resolve(bundle.srcDir, 'shared/scenes'),
-        '~state': path.resolve(bundle.srcDir, 'shared/state'),
-        '~admin': path.resolve(bundle.srcDir, 'shared/scenes/Admin'),
-        '~blog': path.resolve(bundle.srcDir, 'shared/scenes/Blog'),
-        '~components': path.resolve(bundle.srcDir, 'shared/components'),
-        '~core': path.resolve(bundle.srcDir, 'shared/core'),
-        '~templates': path.resolve(bundle.srcDir, 'shared/templates'),
-        '@@broot': boldrRoot.toString(),
+        '@@scenes': path.resolve(bundle.srcDir, 'shared/scenes'),
+        '@@state': path.resolve(bundle.srcDir, 'shared/state'),
+        '@@admin': path.resolve(bundle.srcDir, 'shared/scenes/Admin'),
+        '@@blog': path.resolve(bundle.srcDir, 'shared/scenes/Blog'),
+        '@@components': path.resolve(bundle.srcDir, 'shared/components'),
+        '@@core': path.resolve(bundle.srcDir, 'shared/core'),
+        '@@templates': path.resolve(bundle.srcDir, 'shared/templates'),
+        '@@broot': path.resolve(boldrRoot.toString(), './'),
         // '@@broot':
       },
     },
@@ -203,22 +202,30 @@ module.exports = function createBrowserWebpack(
                       modules: bundle.cssModules,
                       minimize: true,
                       autoprefixer: false,
-                      importLoaders: 1,
-                      context: bundle.srcDir,
+                      importLoaders: 2,
+                      context: path.resolve(bundle.srcDir, './shared'),
                       localIdentName: '[hash:base64:5]',
                     },
+                  },
+                  {
+                    loader: require.resolve('resolve-url-loader'),
                   },
                   {
                     loader: require.resolve('postcss-loader'),
                     options: {
                       // https://webpack.js.org/guides/migrating/#complex-options
                       ident: 'postcss',
+                      sourceMap: false,
                       plugins: () => [
+                        require('postcss-import')({
+                          root: path.resolve(bundle.srcDir, './shared'),
+                        }),
                         require('postcss-flexbugs-fixes'),
                         require('postcss-cssnext')({
-                          browsers: ['> 1%', 'last 2 versions'],
+                          browsers: bundle.browsers,
                           flexbox: 'no-2009',
                         }),
+                        require('postcss-discard-duplicates'),
                       ],
                     },
                   },
@@ -238,29 +245,39 @@ module.exports = function createBrowserWebpack(
                   {
                     loader: require.resolve('css-loader'),
                     options: {
-                      importLoaders: 2,
+                      importLoaders: 3,
                       localIdentName: '[hash:base64:5]',
-                      context: bundle.srcDir,
+                      context: path.resolve(bundle.srcDir, './shared'),
                       sourceMap: false,
                       modules: false,
                     },
+                  },
+                  {
+                    loader: require.resolve('resolve-url-loader'),
                   },
                   {
                     loader: require.resolve('postcss-loader'),
                     options: {
                       // https://webpack.js.org/guides/migrating/#complex-options
                       ident: 'postcss',
+                      parser: 'postcss-scss',
+                      sourceMap: false,
                       plugins: () => [
                         require('postcss-flexbugs-fixes'),
                         require('postcss-cssnext')({
-                          browsers: ['> 1%', 'last 2 versions'],
+                          browsers: bundle.browsers,
                           flexbox: 'no-2009',
                         }),
+                        require('postcss-discard-duplicates'),
                       ],
                     },
                   },
                   {
                     loader: require.resolve('sass-loader'),
+                    options: {
+                      sourceMap: false,
+                      includePaths: [sharedDir],
+                    },
                   },
                 ],
               }),
@@ -337,6 +354,10 @@ module.exports = function createBrowserWebpack(
                     useBuiltins: true,
                     modules: false,
                     exclude: ['transform-regenerator', 'transform-async-to-generator'],
+                    targets: {
+                      uglify: false,
+                      browsers: ['> .5% in US', 'last 1 versions'],
+                    },
                   },
                 ],
               ],
@@ -386,8 +407,11 @@ module.exports = function createBrowserWebpack(
               localIdentName: LOCAL_IDENT,
               sourceMap: false,
               modules: false,
-              context: bundle.srcDir,
+              context: path.resolve(bundle.srcDir, './shared'),
             },
+          },
+          {
+            loader: require.resolve('resolve-url-loader'),
           },
           {
             path: require.resolve('postcss-loader'),
@@ -395,11 +419,15 @@ module.exports = function createBrowserWebpack(
               // https://webpack.js.org/guides/migrating/#complex-options
               ident: 'postcss',
               plugins: () => [
+                require('postcss-import')({
+                  root: path.resolve(bundle.srcDir, './shared'),
+                }),
                 require('postcss-flexbugs-fixes'),
                 require('postcss-cssnext')({
-                  browsers: ['> 1%', 'last 2 versions'],
+                  browsers: bundle.browsers,
                   flexbox: 'no-2009',
                 }),
+                require('postcss-discard-duplicates'),
               ],
             },
           },
@@ -412,29 +440,41 @@ module.exports = function createBrowserWebpack(
           {
             path: require.resolve('css-loader'),
             use: {
-              importLoaders: 2,
+              importLoaders: 3,
               localIdentName: LOCAL_IDENT,
-              sourceMap: false,
+              sourceMap: true,
               modules: false,
-              context: bundle.srcDir,
+              context: path.resolve(bundle.srcDir, './shared'),
             },
           },
           {
-            path: require.resolve('postcss-loader'),
+            loader: require.resolve('resolve-url-loader'),
+          },
+          {
+            loader: require.resolve('postcss-loader'),
             use: {
               // https://webpack.js.org/guides/migrating/#complex-options
               ident: 'postcss',
+              parser: 'postcss-scss',
+              options: {
+                sourceMap: true,
+              },
               plugins: () => [
                 require('postcss-flexbugs-fixes'),
                 require('postcss-cssnext')({
                   browsers: ['> 1%', 'last 2 versions'],
                   flexbox: 'no-2009',
                 }),
+                require('postcss-discard-duplicates'),
               ],
             },
           },
           {
             path: require.resolve('sass-loader'),
+            options: {
+              sourceMap: true,
+              includePaths: [sharedDir],
+            },
           },
         ],
       }),
@@ -456,6 +496,7 @@ module.exports = function createBrowserWebpack(
     browserConfig.plugins.push(
       new webpack.HashedModuleIdsPlugin(),
       new LodashModuleReplacementPlugin(),
+      new webpack.optimize.ModuleConcatenationPlugin(),
       new webpack.optimize.CommonsChunkPlugin({
         name: 'vendor',
         minChunks(module) {
@@ -464,7 +505,7 @@ module.exports = function createBrowserWebpack(
             // If it's inside node_modules
             /node_modules/.test(module.context) &&
             // Do not externalize if the request is a CSS file
-            !/\.(css|less|scss|sass|styl|stylus)$/.test(module.request)
+            !/\.(css|pcss|scss)$/.test(module.request)
           );
         },
       }),
@@ -487,7 +528,7 @@ module.exports = function createBrowserWebpack(
         filename: 'chunk-manifest.json',
         manifestVariable: 'CHUNK_MANIFEST',
       }),
-      new UglifyJsPlugin(),
+      new BabiliPlugin({ evaluate: false }, { comments: false }),
       new StatsPlugin('stats.json', {
         chunkModules: true,
         exclude: [/node_modules[\\/]react/],

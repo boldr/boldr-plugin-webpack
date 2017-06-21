@@ -91,14 +91,15 @@ module.exports = function createNodeWebpack(
       ),
       mainFields: ['module', 'jsnext:main', 'main'],
       alias: {
-        '~scenes': path.resolve(bundle.srcDir, 'shared/scenes'),
-        '~state': path.resolve(bundle.srcDir, 'shared/state'),
-        '~admin': path.resolve(bundle.srcDir, 'shared/scenes/Admin'),
-        '~blog': path.resolve(bundle.srcDir, 'shared/scenes/Blog'),
-        '~components': path.resolve(bundle.srcDir, 'shared/components'),
-        '~core': path.resolve(bundle.srcDir, 'shared/core'),
-        '~templates': path.resolve(bundle.srcDir, 'shared/templates'),
-        '@@broot': boldrRoot.toString(),
+        '@@scenes': path.resolve(bundle.srcDir, 'shared/scenes'),
+        '@@state': path.resolve(bundle.srcDir, 'shared/state'),
+        '@@admin': path.resolve(bundle.srcDir, 'shared/scenes/Admin'),
+        '@@blog': path.resolve(bundle.srcDir, 'shared/scenes/Blog'),
+        '@@components': path.resolve(bundle.srcDir, 'shared/components'),
+        '@@core': path.resolve(bundle.srcDir, 'shared/core'),
+        '@@templates': path.resolve(bundle.srcDir, 'shared/templates'),
+        '@@broot': path.resolve(boldrRoot.toString(), './'),
+        // '@@broot':
       },
     },
     resolveLoader: {
@@ -183,6 +184,9 @@ module.exports = function createNodeWebpack(
                 importLoaders: 1,
               },
             },
+            {
+              loader: require.resolve('resolve-url-loader'),
+            },
             { loader: require.resolve('postcss-loader') },
           ],
         },
@@ -196,6 +200,9 @@ module.exports = function createNodeWebpack(
               options: {
                 importLoaders: 1,
               },
+            },
+            {
+              loader: require.resolve('resolve-url-loader'),
             },
             { loader: require.resolve('postcss-loader') },
             { loader: require.resolve('sass-loader') },

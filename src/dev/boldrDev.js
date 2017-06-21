@@ -38,17 +38,19 @@ module.exports = class BoldrDev {
         }
       });
       this.devClient = new DevClient(clientCompiler, this.config);
-    }).then(clientCompiler => {
-      const serverCompiler = createCompiler(serverConfig);
-      this.devServer = new DevServer(serverCompiler, clientCompiler);
-    });
+    })
+      .then(clientCompiler => {
+        const serverCompiler = createCompiler(serverConfig);
+        this.devServer = new DevServer(serverCompiler, clientCompiler);
+      })
+      .catch(err => logger.error(err));
   }
   shutdown() {
     // Shutdown the client server, then the node.
     return handleShutdown(this.devClient)
       .then(() => handleShutdown(this.devServer))
       .catch(error => {
-        console.error(error);
+        logger.error(error);
       });
   }
 };

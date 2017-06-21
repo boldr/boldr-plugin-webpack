@@ -1,6 +1,6 @@
 {
   "name": "@boldr/plugin-webpack",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Webpack plugin for Boldr.",
   "main": "lib/index.js",
   "scripts": {
@@ -30,11 +30,11 @@
     "lib"
   ],
   "lint-staged": {
-   "*.js": [
-     "prettier --print-width=100 --single-quote=true --jsx-bracket-same-line=false --trailing-comma=all --write \"src/**/*.js\"",
-     "git add"
-   ]
- },
+    "*.js": [
+      "prettier --print-width=100 --single-quote=true --jsx-bracket-same-line=false --trailing-comma=all --write \"src/**/*.js\"",
+      "git add"
+    ]
+  },
   "devDependencies": {
     "babel-cli": "^6.24.1",
     "babel-plugin-syntax-flow": "^6.18.0",
@@ -51,10 +51,12 @@
   },
   "dependencies": {
     "assets-webpack-plugin": "^3.5.1",
-    "babel-loader": "^7.0.0",
+    "babel-loader": "^7.1.0",
     "babel-plugin-import-inspector": "^2.0.0",
     "babel-plugin-lodash": "^3.2.11",
     "babel-plugin-styled-components": "^1.1.4",
+    "babel-preset-boldr": "^0.9.7",
+    "babili-webpack-plugin": "^0.1.1",
     "bluebird": "^3.5.0",
     "boldr-engine": "^0.1.1",
     "boldr-root": "^0.0.1",
@@ -77,18 +79,22 @@
     "node-fetch": "^1.7.1",
     "node-sass": "^4.5.3",
     "postcss-cssnext": "^2.11.0",
+    "postcss-discard-duplicates": "^2.1.0",
     "postcss-flexbugs-fixes": "^3.0.0",
+    "postcss-import": "^10.0.0",
     "postcss-loader": "^2.0.6",
-    "promise": "^7.3.0",
+    "postcss-scss": "^1.0.1",
+    "promise": "^8.0.0",
     "react-dev-utils": "^3.0.0",
     "react-hot-loader": "3.0.0-beta.7",
+    "resolve-url-loader": "^2.0.3",
     "sass-loader": "^6.0.6",
     "source-map-support": "^0.4.15",
     "stats-webpack-plugin": "^0.6.1",
     "style-loader": "^0.18.2",
     "terminate": "^2.1.0",
     "uglify-js": "git://github.com/mishoo/UglifyJS2#harmony-v2.8.22",
-    "uglifyjs-webpack-plugin": "^0.4.4",
+    "uglifyjs-webpack-plugin": "^0.4.6",
     "url-loader": "^0.5.9",
     "webpack": "^3.0.0",
     "webpack-bundle-analyzer": "^2.8.2",
