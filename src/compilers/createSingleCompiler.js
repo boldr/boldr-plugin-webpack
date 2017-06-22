@@ -12,7 +12,7 @@ module.exports = function createSingleCompiler(webpackConfig: WebpackCompiler): 
   return new Promise((resolve, reject) => {
     webpack(webpackConfig, (err, stats) => {
       if (err || stats.hasErrors()) {
-        debug(err);
+        debug('stats', stats.toString());
         return reject(err);
       }
 

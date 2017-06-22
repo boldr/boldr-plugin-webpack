@@ -79,7 +79,7 @@ module.exports = class DevServer {
         waitForClientThenStartServer();
       } catch (err) {
         logger.error(`Startup failed. ${err}`);
-        process.exit(1);
+        process.exit();
       }
     });
 

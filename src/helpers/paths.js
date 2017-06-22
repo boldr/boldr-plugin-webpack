@@ -40,11 +40,11 @@ const nodePaths = (process.env.NODE_PATH || '')
   .map(resolveProject);
 
 const ownPackageJson = require('../../package.json');
+
 const boldrDxPath = resolveProject(`node_modules/${ownPackageJson.name}`);
 const boldrDxLinked = fs.existsSync(boldrDxPath) && fs.lstatSync(boldrDxPath).isSymbolicLink();
 
-// config before publish: we're in ./packages/react-scripts/config/
-if (!boldrDxLinked && __dirname.indexOf(path.join('packages', 'boldr-dx', 'config')) !== -1) {
+if (!boldrDxLinked && __dirname.indexOf(path.join('packages', '@boldr/plugin-webpack')) !== -1) {
   console.log('hello');
 }
 

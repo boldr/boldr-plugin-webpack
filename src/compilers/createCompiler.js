@@ -7,8 +7,8 @@ module.exports = function createCompiler(config: WebpackCompiler) {
   try {
     compiler = webpack(config);
   } catch (e) {
-    logger.error('Failed to compile.', e);
-    process.exit(1);
+    logger.error('Failed to compile.');
+    process.exit();
   }
   return compiler;
 };

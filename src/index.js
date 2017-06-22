@@ -1,6 +1,5 @@
 /* @flow */
 /* eslint-disable global-require, no-console, require-await */
-require('promise/lib/es6-extensions.js');
 const path = require('path');
 const fs = require('fs-extra');
 const debug = require('debug')('boldr:plugin:webpack');

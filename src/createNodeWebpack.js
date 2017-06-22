@@ -3,9 +3,7 @@ const path = require('path');
 const fs = require('fs');
 const debug = require('debug')('boldr:plugin:webpack:createNode');
 const webpack = require('webpack');
-const removeNil = require('boldr-utils/lib/arrays/removeNil');
-const ifElse = require('boldr-utils/lib/logic/ifElse');
-const appRoot = require('boldr-utils/lib/node/appRoot');
+const { removeNil, ifElse, mergeDeep, filterEmpty, appRoot } = require('boldr-utils');
 const nodeExternals = require('webpack-node-externals');
 const CaseSensitivePathsPlugin = require('case-sensitive-paths-webpack-plugin');
 const CircularDependencyPlugin = require('circular-dependency-plugin');
@@ -99,7 +97,6 @@ module.exports = function createNodeWebpack(
         '@@core': path.resolve(bundle.srcDir, 'shared/core'),
         '@@templates': path.resolve(bundle.srcDir, 'shared/templates'),
         '@@broot': path.resolve(boldrRoot.toString(), './'),
-        // '@@broot':
       },
     },
     resolveLoader: {
@@ -235,6 +232,11 @@ module.exports = function createNodeWebpack(
           options: {
             emitFile: false,
           },
+        },
+        {
+          test: /\.(graphql|gql)$/,
+          exclude: /node_modules/,
+          loader: require.resolve('graphql-tag/loader'),
         },
       ],
     },

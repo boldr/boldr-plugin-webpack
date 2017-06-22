@@ -4,15 +4,12 @@ const path = require('path');
 const fs = require('fs');
 const debug = require('debug')('boldr:plugin:webpack:createBrowser');
 const webpack = require('webpack');
-const removeNil = require('boldr-utils/lib/arrays/removeNil');
-const ifElse = require('boldr-utils/lib/logic/ifElse');
-const mergeDeep = require('boldr-utils/lib/objects/mergeDeep');
-const filterEmpty = require('boldr-utils/lib/objects/filterEmpty');
-const appRoot = require('boldr-utils/lib/node/appRoot');
+
+const { removeNil, ifElse, mergeDeep, filterEmpty, appRoot, onlyIf } = require('boldr-utils');
 const ExtractTextPlugin = require('extract-text-webpack-plugin');
 const AssetsPlugin = require('assets-webpack-plugin');
-// const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
-const BabiliPlugin = require('babili-webpack-plugin');
+const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
+// const BabiliPlugin = require('babili-webpack-plugin');
 const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
 const ChunkManifestPlugin = require('chunk-manifest-webpack-plugin');
 const CaseSensitivePathsPlugin = require('case-sensitive-paths-webpack-plugin');
@@ -160,7 +157,6 @@ module.exports = function createBrowserWebpack(
         '@@core': path.resolve(bundle.srcDir, 'shared/core'),
         '@@templates': path.resolve(bundle.srcDir, 'shared/templates'),
         '@@broot': path.resolve(boldrRoot.toString(), './'),
-        // '@@broot':
       },
     },
     resolveLoader: {
@@ -277,6 +273,7 @@ module.exports = function createBrowserWebpack(
                     options: {
                       sourceMap: false,
                       includePaths: [sharedDir],
+                      outputStyle: 'compressed',
                     },
                   },
                 ],
@@ -309,6 +306,11 @@ module.exports = function createBrowserWebpack(
           options: {
             emitFile: true,
           },
+        },
+        {
+          test: /\.(graphql|gql)$/,
+          exclude: /node_modules/,
+          loader: require.resolve('graphql-tag/loader'),
         },
       ]),
     },
@@ -355,7 +357,7 @@ module.exports = function createBrowserWebpack(
                     modules: false,
                     exclude: ['transform-regenerator', 'transform-async-to-generator'],
                     targets: {
-                      uglify: false,
+                      uglify: !_DEV,
                       browsers: ['> .5% in US', 'last 1 versions'],
                     },
                   },
@@ -375,7 +377,12 @@ module.exports = function createBrowserWebpack(
                     webpackRequireWeakId: true,
                   },
                 ],
-                ifProd(require.resolve('babel-plugin-lodash')),
+                ifProd([
+                  require.resolve('babel-plugin-lodash'),
+                  {
+                    id: ['lodash', 'async', 'ramda'],
+                  },
+                ]),
               ]),
             },
           },
@@ -496,7 +503,7 @@ module.exports = function createBrowserWebpack(
     browserConfig.plugins.push(
       new webpack.HashedModuleIdsPlugin(),
       new LodashModuleReplacementPlugin(),
-      new webpack.optimize.ModuleConcatenationPlugin(),
+      // new webpack.optimize.ModuleConcatenationPlugin(),
       new webpack.optimize.CommonsChunkPlugin({
         name: 'vendor',
         minChunks(module) {
@@ -504,6 +511,7 @@ module.exports = function createBrowserWebpack(
           return (
             // If it's inside node_modules
             /node_modules/.test(module.context) &&
+            !/boldr-utils/.test(module.context) &&
             // Do not externalize if the request is a CSS file
             !/\.(css|pcss|scss)$/.test(module.request)
           );
@@ -523,20 +531,30 @@ module.exports = function createBrowserWebpack(
         allChunks: true,
         ignoreOrder: bundle.cssModules,
       }),
-      new webpack.optimize.AggressiveMergingPlugin(),
+      new webpack.optimize.ModuleConcatenationPlugin(),
       new ChunkManifestPlugin({
         filename: 'chunk-manifest.json',
         manifestVariable: 'CHUNK_MANIFEST',
       }),
-      new BabiliPlugin({ evaluate: false }, { comments: false }),
-      new StatsPlugin('stats.json', {
-        chunkModules: true,
-        exclude: [/node_modules[\\/]react/],
+      new UglifyJSPlugin({
+        mangle: false,
+        compress: {
+          warnings: false,
+          comparisons: false,
+        },
+        output: {
+          comments: false,
+        },
+        sourceMap: true,
       }),
       new BundleAnalyzerPlugin({
         openAnalyzer: false,
         analyzerMode: 'static',
         logLevel: 'error',
+      }),
+      new StatsPlugin('stats.json', {
+        chunkModules: true,
+        exclude: [/node_modules[\\/]react/],
       }),
     );
   }
